@@ -26,19 +26,21 @@ Route::get('/dashboard', function () {
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
-    Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
 
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Rutas para Proyectos usando Route::resource
+    Route::resource('projects', ProjectController::class)
+        ->only(['show', 'store', 'edit', 'update', 'destroy']);
+
+    // Rutas para Tareas
     Route::post('/projects/{project}/tasks', [TaskController::class, 'store'])->name('tasks.store');
     Route::patch('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
-});
 
-Route::middleware('auth')->group(function () {
+    // Rutas para el Perfil de Usuario
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

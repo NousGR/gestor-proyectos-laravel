@@ -19,16 +19,19 @@ class TaskController extends Controller
 
         $project->tasks()->create($validated);
 
-        return Redirect::route('projects.show', $project);
+        return Redirect::route('projects.show', $project)->with('success', 'Tarea añadida con éxito.');
     }
 
     public function update(Request $request, Task $task)
     {
         $this->authorize('update', $task);
 
-        $task->update([
-            'is_completed' => $request->is_completed
+        $validated = $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'is_completed' => 'sometimes|required|boolean',
         ]);
+
+        $task->update($validated);
 
         return Redirect::route('projects.show', $task->project_id);
     }
@@ -39,6 +42,6 @@ class TaskController extends Controller
 
         $task->delete();
 
-        return Redirect::route('projects.show', $task->project_id);
+        return Redirect::route('projects.show', $task->project_id)->with('success', 'Tarea eliminada.');
     }
 }
