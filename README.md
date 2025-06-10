@@ -1,61 +1,87 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Gestor de Proyectos con Laravel y Vue
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Este es un proyecto de portafolio que consiste en una aplicación web completa para la gestión de proyectos y tareas, construida con un stack tecnológico moderno. La aplicación permite a los usuarios registrarse, iniciar sesión y gestionar sus propios proyectos y tareas de forma privada y segura.
 
-## About Laravel
+## Características Implementadas
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+La aplicación cuenta con un ciclo de vida completo para la gestión de entidades y una experiencia de usuario mejorada.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Funcionalidades del Backend:
+- **Autenticación Completa:** Sistema de registro, inicio de sesión y gestión de perfiles de usuario implementado con **Laravel Breeze**.
+- **Gestión de Proyectos (CRUD):**
+    - Crear, leer, editar y eliminar proyectos.
+    - Cada proyecto está asociado a un único usuario.
+    - Subida y almacenamiento de imágenes de portada para cada proyecto.
+- **Gestión de Tareas (CRUD):**
+    - Añadir tareas a un proyecto específico.
+    - Editar el título de las tareas.
+    - Marcar tareas como completadas o pendientes.
+    - Eliminar tareas.
+- **Seguridad y Autorización:** Uso de **Policies** de Laravel para asegurar que un usuario solo pueda ver, editar o eliminar sus propios proyectos y tareas.
+- **Relaciones de Base de Datos:** Arquitectura de datos relacional (Usuarios -> Proyectos -> Tareas) implementada con el ORM Eloquent.
+- **Atributos Calculados:** El progreso de un proyecto se calcula automáticamente en el backend como un "accessor" basado en el porcentaje de tareas completadas.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Funcionalidades del Frontend:
+- **Interfaz Reactiva (SPA-like):** Construido con **Vue.js** e **Inertia.js** para una experiencia de usuario rápida y fluida sin recargas de página.
+- **Notificaciones Flash:** Mensajes de éxito que aparecen después de realizar acciones (crear, actualizar, eliminar) para dar feedback al usuario.
+- **Modales de Confirmación:** Ventanas emergentes personalizadas para acciones destructivas (eliminar un proyecto o una tarea), mejorando la UX y previniendo errores.
+- **Organización Visual:**
+    - Las tareas completadas se separan visualmente y se mueven al final de la lista.
+    - Indicadores visuales para la prioridad de las tareas.
+    - Barra de progreso automática en cada proyecto que se actualiza en tiempo real.
 
-## Learning Laravel
+## Stack Tecnológico
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- **Backend:** PHP 8.2+, Laravel 12
+- **Frontend:** Vue.js 3, Inertia.js, Tailwind CSS, Vite
+- **Base de Datos:** PostgreSQL
+- **Entorno de Desarrollo:** Docker, Laravel Sail (corriendo en una VM de Ubuntu)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Cómo Iniciar el Entorno de Desarrollo Local
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Este proyecto está configurado para correr en un entorno de desarrollo basado en Docker con Laravel Sail.
 
-## Laravel Sponsors
+1.  **Clonar el repositorio:**
+    ```bash
+    git clone [https://github.com/NousGR/gestor-proyectos-laravel.git](https://github.com/NousGR/gestor-proyectos-laravel.git)
+    cd gestor-proyectos-laravel
+    ```
+2.  **Instalar dependencias:**
+    ```bash
+    # Instalar dependencias de PHP
+    composer install
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+    # Instalar dependencias de JavaScript
+    npm install
+    ```
+3.  **Configurar el entorno:**
+    * Copiar el archivo de entorno: `cp .env.example .env`
+    * Generar la clave de la aplicación: `php artisan key:generate`
+    * Asegurarse de que el archivo `.env` tenga la configuración correcta para Sail y PostgreSQL:
+        ```env
+        DB_CONNECTION=pgsql
+        DB_HOST=pgsql
+        DB_PORT=5432
+        DB_DATABASE=laravel
+        DB_USERNAME=sail
+        DB_PASSWORD=password
+        ```
 
-### Premium Partners
+4.  **Iniciar los servicios con Sail:**
+    * Crear un alias para comodidad (opcional, por sesión): `alias sail='bash vendor/bin/sail'`
+    * Levantar los contenedores en segundo plano: `sail up -d`
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+5.  **Preparar la base de datos:**
+    * Ejecutar las migraciones para crear todas las tablas: `sail artisan migrate`
 
-## Contributing
+6.  **Iniciar el servidor de frontend:**
+    * En una segunda terminal, compilar los assets y mantenerlo observando cambios: `npm run dev`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+7.  **Acceder a la aplicación:**
+    * La aplicación estará disponible en `http://localhost`.
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Ideas para el Futuro (Roadmap)
+- Implementar un sistema de comentarios para las tareas.
+- Añadir lógica para que las tareas se marquen como "vencidas" si su fecha límite ha pasado (usando el Task Scheduler de Laravel).
+- Mejorar el formulario de edición de proyectos para permitir la actualización o eliminación de la imagen de portada.
+- Escribir pruebas automatizadas con Pest para asegurar la robustez de la aplicación.
