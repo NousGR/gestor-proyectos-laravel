@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\Rule;
 
 class TaskController extends Controller
 {
@@ -15,6 +16,8 @@ class TaskController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'due_date' => 'nullable|date',
+            'priority' => ['required', Rule::in(['low', 'medium', 'high'])],
         ]);
 
         $project->tasks()->create($validated);
@@ -29,11 +32,13 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'is_completed' => 'sometimes|required|boolean',
+            'due_date' => 'sometimes|nullable|date',
+            'priority' => ['sometimes','required', Rule::in(['low', 'medium', 'high'])],
         ]);
 
         $task->update($validated);
 
-        return Redirect::route('projects.show', $task->project_id);
+        return Redirect::back(); // Usamos Redirect::back() para que funcione desde cualquier vista
     }
 
     public function destroy(Task $task)

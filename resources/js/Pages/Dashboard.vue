@@ -10,10 +10,11 @@ defineProps({
 const form = useForm({
     title: '',
     description: '',
-    image: null,
+    image: null, // 'image' ahora guardará el objeto del archivo
 });
 
 const submit = () => {
+    // Inertia manejará la subida como multipart/form-data automáticamente
     form.post('/projects', {
         onSuccess: () => form.reset(),
     });
@@ -87,14 +88,24 @@ const submit = () => {
                         <div v-if="projects && projects.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
                             <Link v-for="project in projects" :key="project.id" :href="`/projects/${project.id}`">
-                                <div class="rounded-lg overflow-hidden border border-gray-700 bg-gray-900/50 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/20 hover:border-indigo-500">
+                                <div class="rounded-lg overflow-hidden border border-gray-700 bg-gray-900/50 flex flex-col h-full transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/20 hover:border-indigo-500">
                                     <div v-if="project.image_url" class="w-full h-40 bg-cover bg-center" :style="{ backgroundImage: `url(/storage/${project.image_url})` }"></div>
                                     <div v-else class="w-full h-40 bg-gray-800 flex items-center justify-center">
                                         <ImageIcon class="w-12 h-12 text-gray-500" />
                                     </div>
-                                    <div class="p-4">
+                                    <div class="p-4 flex flex-col flex-grow">
                                         <h4 class="font-bold text-lg text-white">{{ project.title }}</h4>
-                                        <p class="text-gray-400 text-sm mt-1 truncate">{{ project.description }}</p>
+                                        <p class="text-gray-400 text-sm mt-1 truncate flex-grow">{{ project.description }}</p>
+
+                                        <div class="mt-4">
+                                            <div class="flex justify-between items-center mb-1">
+                                                <span class="text-xs font-semibold text-gray-400">Progreso</span>
+                                                <span class="text-xs font-bold text-white">{{ project.progress }}%</span>
+                                            </div>
+                                            <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                                <div class="bg-indigo-500 h-2.5 rounded-full" :style="{ width: project.progress + '%' }"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </Link>

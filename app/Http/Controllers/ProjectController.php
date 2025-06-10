@@ -6,7 +6,7 @@ use App\Models\Project;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Storage; // <-- Añadido para manejar archivos
+use Illuminate\Support\Facades\Storage;
 
 class ProjectController extends Controller
 {
@@ -31,12 +31,16 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:2048', // <-- Validamos que sea una imagen
+            'image' => 'nullable|image|max:2048',
         ]);
 
         if ($request->hasFile('image')) {
-            $validated['image_url'] = $request->file('image')->store('projects', 'public');
+            $path = $request->file('image')->store('projects', 'public');
+            $validated['image_url'] = $path;
         }
+
+        // Eliminamos la clave 'image' del array validado antes de crear el registro
+        unset($validated['image']);
 
         $request->user()->projects()->create($validated);
         return Redirect::route('dashboard')->with('success', 'Proyecto creado con éxito.');
@@ -46,15 +50,13 @@ class ProjectController extends Controller
     {
         $this->authorize('update', $project);
 
-        // Aquí no manejaremos la actualización de imagen aún para mantenerlo simple.
-        // Nos enfocaremos en el CRUD de la información del proyecto.
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
         $project->update($validated);
-        return Redirect::route('projects.show', $project->id)->with('success', 'Proyecto actualizado con éxito.');
+        return Redirect::route('projects.show', 'project')->with('success', 'Proyecto actualizado con éxito.');
     }
 
     public function destroy(Project $project)
