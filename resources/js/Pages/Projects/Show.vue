@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
-import { Trash2, Pencil, Check, X, Circle } from 'lucide-vue-next';
+import { Trash2, Pencil, Check, X, Circle, MessageSquare } from 'lucide-vue-next';
 
 const props = defineProps({
     project: Object,
@@ -21,6 +21,23 @@ const editTaskForm = useForm({
     due_date: null,
     priority: 'medium',
 });
+
+const commentForms = ref({});
+
+const initAndGetCommentForm = (taskId) => {
+    if (!commentForms.value[taskId]) {
+        commentForms.value[taskId] = useForm({ body: '' });
+    }
+    return commentForms.value[taskId];
+};
+
+const submitComment = (taskId) => {
+    const form = initAndGetCommentForm(taskId);
+    form.post(`/tasks/${taskId}/comments`, {
+        preserveScroll: true,
+        onSuccess: () => form.reset(),
+    });
+};
 
 const confirmingTaskDeletion = ref(false);
 const taskToDelete = ref(null);
@@ -91,6 +108,12 @@ const deleteTask = () => {
         preserveScroll: true,
     });
 };
+
+const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+};
+
 </script>
 
 <template>
@@ -156,26 +179,53 @@ const deleteTask = () => {
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                     <h3 class="text-xl font-bold mb-4 text-gray-100">Tareas Pendientes</h3>
                     <div v-if="incompleteTasks.length > 0" class="space-y-3">
-                        <div v-for="task in incompleteTasks" :key="task.id" class="p-4 flex items-center justify-between border border-gray-700 rounded-lg bg-gray-900/50">
-                            <div v-if="editingTask === task.id" class="flex-grow flex items-center gap-2">
-                                <input type="text" v-model="editTaskForm.title" class="flex-grow bg-gray-700 border-gray-600 rounded-md text-white" @keyup.enter="submitTaskUpdate(task)" @keyup.esc="cancelEditMode" />
-                                <button @click="submitTaskUpdate(task)" class="text-green-500 hover:text-green-400"><Check class="h-5 w-5" /></button>
-                                <button @click="cancelEditMode" class="text-gray-500 hover:text-gray-400"><X class="h-5 w-5" /></button>
+                        <div v-for="task in incompleteTasks" :key="task.id" class="p-4 border border-gray-700 rounded-lg bg-gray-900/50">
+                            <div class="flex items-center justify-between">
+                                <div v-if="editingTask === task.id" class="flex-grow flex items-center gap-2">
+                                    <input type="text" v-model="editTaskForm.title" class="flex-grow bg-gray-700 border-gray-600 rounded-md text-white" @keyup.enter="submitTaskUpdate(task)" @keyup.esc="cancelEditMode" />
+                                    <button @click="submitTaskUpdate(task)" class="text-green-500 hover:text-green-400"><Check class="h-5 w-5" /></button>
+                                    <button @click="cancelEditMode" class="text-gray-500 hover:text-gray-400"><X class="h-5 w-5" /></button>
+                                </div>
+                                <div v-else class="flex-grow flex items-center gap-3">
+                                    <input
+                                        type="checkbox"
+                                        :checked="task.is_completed"
+                                        @change="toggleTaskCompletion(task)"
+                                        class="h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-600 focus:ring-indigo-500"
+                                    />
+                                    <Circle class="h-4 w-4 flex-shrink-0" :class="priorityClasses[task.priority]" />
+                                    <span class="text-gray-200">{{ task.title }}</span>
+                                    <span v-if="task.due_date" class="text-xs text-gray-500 ml-auto me-4">{{ new Date(task.due_date).toLocaleDateString() }}</span>
+                                </div>
+                                <div v-if="editingTask !== task.id" class="flex items-center gap-2">
+                                    <button @click="enterEditMode(task)" class="text-gray-500 hover:text-indigo-400 transition-colors"><Pencil class="h-5 w-5" /></button>
+                                    <button @click="confirmTaskDeletion(task)" class="text-gray-500 hover:text-red-500 transition-colors"><Trash2 class="h-5 w-5" /></button>
+                                </div>
                             </div>
-                            <div v-else class="flex-grow flex items-center gap-3">
-                                <input
-                                    type="checkbox"
-                                    :checked="task.is_completed"
-                                    @change="toggleTaskCompletion(task)"
-                                    class="h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-600"
-                                />
-                                <Circle class="h-4 w-4 flex-shrink-0" :class="priorityClasses[task.priority]" />
-                                <span class="text-gray-200">{{ task.title }}</span>
-                                <span v-if="task.due_date" class="text-xs text-gray-500 ml-auto me-4">{{ new Date(task.due_date).toLocaleDateString() }}</span>
-                            </div>
-                            <div v-if="editingTask !== task.id" class="flex items-center gap-2">
-                                <button @click="enterEditMode(task)" class="text-gray-500 hover:text-indigo-400 transition-colors"><Pencil class="h-5 w-5" /></button>
-                                <button @click="confirmTaskDeletion(task)" class="text-gray-500 hover:text-red-500 transition-colors"><Trash2 class="h-5 w-5" /></button>
+                            <div class="mt-4 pl-8 border-t border-gray-800 pt-4">
+                                <div class="space-y-3" v-if="task.comments && task.comments.length > 0">
+                                    <div v-for="comment in task.comments" :key="comment.id" class="text-sm text-gray-400 flex items-start gap-2">
+                                        <div class="font-semibold text-gray-300">{{ comment.user.name }}:</div>
+                                        <div class="flex-1">{{ comment.body }}</div>
+                                        <div class="text-xs text-gray-500 whitespace-nowrap">{{ formatDate(comment.created_at) }}</div>
+                                    </div>
+                                </div>
+                                <form @submit.prevent="submitComment(task.id)" class="mt-4 flex gap-2">
+                                    <input
+                                        type="text"
+                                        v-model="initAndGetCommentForm(task.id).body"
+                                        class="w-full bg-gray-800 border-gray-700 text-sm text-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                        placeholder="Añadir un comentario..."
+                                        required
+                                    />
+                                    <button
+                                        type="submit"
+                                        :disabled="initAndGetCommentForm(task.id).processing"
+                                        class="inline-flex items-center px-3 py-1 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50"
+                                    >
+                                        <MessageSquare class="h-4 w-4" />
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -186,22 +236,24 @@ const deleteTask = () => {
                     <div v-if="completedTasks.length > 0" class="mt-8">
                         <h3 class="text-lg font-bold mb-4 text-gray-500">Tareas Completadas</h3>
                         <div class="space-y-3">
-                            <div v-for="task in completedTasks" :key="task.id" class="p-4 flex items-center justify-between border border-gray-800 rounded-lg bg-gray-900/50 opacity-60">
-                                <div class="flex-grow flex items-center gap-3">
-                                    <input
-                                        type="checkbox"
-                                        :checked="task.is_completed"
-                                        @change="toggleTaskCompletion(task)"
-                                        class="h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-600"
-                                    />
-                                    <Circle class="h-4 w-4 flex-shrink-0" :class="priorityClasses[task.priority]" />
-                                    <span class="line-through text-gray-500">
-                                        {{ task.title }}
-                                    </span>
-                                    <span v-if="task.due_date" class="text-xs text-gray-500 ml-auto me-4">{{ new Date(task.due_date).toLocaleDateString() }}</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <button @click="confirmTaskDeletion(task)" class="text-gray-500 hover:text-red-500 transition-colors"><Trash2 class="h-5 w-5" /></button>
+                            <div v-for="task in completedTasks" :key="task.id" class="p-4 border border-gray-800 rounded-lg bg-gray-900/50 opacity-60">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-grow flex items-center gap-3">
+                                        <input
+                                            type="checkbox"
+                                            :checked="task.is_completed"
+                                            @change="toggleTaskCompletion(task)"
+                                            class="h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-600"
+                                        />
+                                        <Circle class="h-4 w-4 flex-shrink-0" :class="priorityClasses[task.priority]" />
+                                        <span class="line-through text-gray-500">
+                                            {{ task.title }}
+                                        </span>
+                                        <span v-if="task.due_date" class="text-xs text-gray-500 ml-auto me-4">{{ new Date(task.due_date).toLocaleDateString() }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button @click="confirmTaskDeletion(task)" class="text-gray-500 hover:text-red-500 transition-colors"><Trash2 class="h-5 w-5" /></button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

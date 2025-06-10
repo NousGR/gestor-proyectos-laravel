@@ -14,7 +14,7 @@ class ProjectController extends Controller
     {
         $this->authorize('view', $project);
         return Inertia::render('Projects/Show', [
-            'project' => $project->load('tasks')
+            'project' => $project->load(['tasks.comments.user'])
         ]);
     }
 
@@ -39,7 +39,6 @@ class ProjectController extends Controller
             $validated['image_url'] = $path;
         }
 
-        // Eliminamos la clave 'image' del array validado antes de crear el registro
         unset($validated['image']);
 
         $request->user()->projects()->create($validated);
@@ -53,10 +52,27 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'image' => 'nullable|image|max:2048',
         ]);
 
-        $project->update($validated);
-        return Redirect::route('projects.show', 'project')->with('success', 'Proyecto actualizado con éxito.');
+        if ($request->boolean('remove_image') && $project->image_url) {
+            Storage::disk('public')->delete($project->image_url);
+            $project->image_url = null;
+        }
+
+        if ($request->hasFile('image')) {
+            if ($project->image_url) {
+                Storage::disk('public')->delete($project->image_url);
+            }
+            $path = $request->file('image')->store('projects', 'public');
+            $project->image_url = $path;
+        }
+
+        $project->title = $validated['title'];
+        $project->description = $validated['description'];
+        $project->save();
+
+        return Redirect::route('projects.show', $project)->with('success', 'Proyecto actualizado con éxito.');
     }
 
     public function destroy(Project $project)

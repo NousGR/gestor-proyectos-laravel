@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\CommentController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -31,6 +32,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Rutas para Proyectos usando Route::resource
     Route::resource('projects', ProjectController::class)
         ->only(['show', 'store', 'edit', 'update', 'destroy']);
+
+    Route::post('/tasks/{task}/comments', [CommentController::class, 'store'])->name('comments.store');
 
     // Rutas para Tareas
     Route::post('/projects/{project}/tasks', [TaskController::class, 'store'])->name('tasks.store');
