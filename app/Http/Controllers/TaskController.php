@@ -20,6 +20,9 @@ class TaskController extends Controller
             'priority' => ['required', Rule::in(['low', 'medium', 'high'])],
         ]);
 
+        $lastOrder = $project->tasks()->max('order_column');
+        $validated['order_column'] = $lastOrder + 1;
+
         $project->tasks()->create($validated);
 
         return Redirect::route('projects.show', $project)->with('success', 'Tarea añadida con éxito.');

@@ -15,6 +15,8 @@ class Task extends Model
         'is_completed',
         'due_date',
         'priority',
+        'status',
+        'order_column',
     ];
 
     protected $casts = [
@@ -30,5 +32,10 @@ class Task extends Model
     public function comments()
     {
         return $this->hasMany(Comment::class)->latest();
+    }
+
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class)->latest();
     }
 }

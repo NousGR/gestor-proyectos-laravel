@@ -10,11 +10,41 @@ use Illuminate\Support\Facades\Storage;
 
 class ProjectController extends Controller
 {
-    public function show(Project $project)
+    public function show(Request $request, Project $project)
     {
         $this->authorize('view', $project);
+
+        $project->load([
+            'tasks' => function ($query) use ($request) {
+                $query->orderBy('order_column', 'asc'); // <- Añade esta línea
+                if ($request->filled('filter_priority')) {
+                    $query->where('priority', $request->filter_priority);
+                }
+                if ($request->filled('filter_status')) {
+                    $query->where('status', $request->filter_status);
+                }
+                if ($request->filled('sort')) {
+                    $sortField = $request->sort;
+                    if ($sortField === 'priority') {
+                        $query->orderByRaw("
+                            CASE
+                                WHEN priority = 'high' THEN 1
+                                WHEN priority = 'medium' THEN 2
+                                WHEN priority = 'low' THEN 3
+                            END
+                        ");
+                    } else {
+                        $query->orderBy($sortField, 'asc');
+                    }
+                }
+            },
+            'tasks.comments.user',
+            'tasks.attachments'
+        ]);
+
         return Inertia::render('Projects/Show', [
-            'project' => $project->load(['tasks.comments.user'])
+            'project' => $project,
+            'filters' => $request->only(['filter_priority', 'filter_status', 'sort']),
         ]);
     }
 
