@@ -14,10 +14,10 @@ class Project extends Model
         'title',
         'description',
         'image_url',
+        'color',
+        'icon',
     ];
 
-    // Le decimos a Laravel que siempre añada nuestro atributo 'progress'
-    // cuando convierta el modelo a un array o JSON.
     protected $appends = ['progress'];
 
     public function tasks()
@@ -25,7 +25,6 @@ class Project extends Model
         return $this->hasMany(Task::class);
     }
 
-    // --- ESTA ES LA NUEVA FUNCIÓN (ACCESSOR) ---
     protected function progress(): Attribute
     {
         return Attribute::make(
@@ -33,12 +32,11 @@ class Project extends Model
                 $totalTasks = $this->tasks()->count();
 
                 if ($totalTasks === 0) {
-                    return 0; // Si no hay tareas, el progreso es 0
+                    return 0;
                 }
 
                 $completedTasks = $this->tasks()->where('is_completed', true)->count();
 
-                // Calculamos y redondeamos el porcentaje
                 return round(($completedTasks / $totalTasks) * 100);
             }
         );

@@ -16,7 +16,7 @@ class ProjectController extends Controller
 
         $project->load([
             'tasks' => function ($query) use ($request) {
-                $query->orderBy('order_column', 'asc'); // <- Añade esta línea
+                $query->orderBy('order_column', 'asc');
                 if ($request->filled('filter_priority')) {
                     $query->where('priority', $request->filter_priority);
                 }
@@ -62,6 +62,8 @@ class ProjectController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
+            'color' => 'nullable|string|max:7',
+            'icon' => 'nullable|string|max:50',
         ]);
 
         if ($request->hasFile('image')) {
@@ -79,11 +81,18 @@ class ProjectController extends Controller
     {
         $this->authorize('update', $project);
 
-        $validated = $request->validate([
+        $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
+            'color' => 'nullable|string|max:7',
+            'icon' => 'nullable|string|max:50',
         ]);
+
+        $project->title = $validatedData['title'];
+        $project->description = $validatedData['description'];
+        $project->color = $validatedData['color'];
+        $project->icon = $validatedData['icon'];
 
         if ($request->boolean('remove_image') && $project->image_url) {
             Storage::disk('public')->delete($project->image_url);
@@ -98,11 +107,9 @@ class ProjectController extends Controller
             $project->image_url = $path;
         }
 
-        $project->title = $validated['title'];
-        $project->description = $validated['description'];
         $project->save();
 
-        return Redirect::route('projects.show', $project)->with('success', 'Proyecto actualizado con éxito.');
+        return Redirect::route('dashboard')->with('success', 'Proyecto actualizado con éxito.');
     }
 
     public function destroy(Project $project)
