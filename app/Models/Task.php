@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Task extends Model
 {
@@ -37,5 +38,17 @@ class Task extends Model
     public function attachments()
     {
         return $this->hasMany(Attachment::class)->latest();
+    }
+
+    public function prerequisites(): BelongsToMany
+    {
+        return $this->belongsToMany(Task::class, 'task_dependencies', 'task_id', 'prerequisite_task_id')
+            ->withTimestamps();
+    }
+
+    public function dependents(): BelongsToMany
+    {
+        return $this->belongsToMany(Task::class, 'task_dependencies', 'prerequisite_task_id', 'task_id')
+            ->withTimestamps();
     }
 }

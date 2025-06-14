@@ -5,12 +5,38 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { onMounted, ref } from 'vue';
+
+const props = defineProps({
+    siteKey: String,
+});
 
 const form = useForm({
     name: '',
     email: '',
     password: '',
     password_confirmation: '',
+    'g-recaptcha-response': '',
+});
+
+const recaptchaContainer = ref(null);
+
+const handleRecaptchaVerify = (token) => {
+    form['g-recaptcha-response'] = token;
+};
+
+window.handleRecaptchaVerify = handleRecaptchaVerify;
+
+onMounted(() => {
+    const checkGrecaptcha = setInterval(() => {
+        if (window.grecaptcha && window.grecaptcha.render && recaptchaContainer.value) {
+            clearInterval(checkGrecaptcha);
+            grecaptcha.render(recaptchaContainer.value, {
+                'sitekey' : props.siteKey,
+                'callback' : 'handleRecaptchaVerify',
+            });
+        }
+    }, 100);
 });
 
 const submit = () => {
@@ -76,6 +102,15 @@ const submit = () => {
                     autocomplete="new-password"
                 />
                 <InputError class="mt-2" :message="form.errors.password_confirmation" />
+            </div>
+
+            <div class="mt-4">
+                <div ref="recaptchaContainer"></div>
+                <InputError class="mt-2" :message="form.errors['g-recaptcha-response']" />
+
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    ¿No ves el CAPTCHA? Podría estar siendo bloqueado por tu navegador. Intenta desactivar el protector de privacidad para este sitio.
+                </p>
             </div>
 
             <div class="flex items-center justify-end mt-4">

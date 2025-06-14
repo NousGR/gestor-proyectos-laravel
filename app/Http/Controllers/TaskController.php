@@ -32,6 +32,13 @@ class TaskController extends Controller
     {
         $this->authorize('update', $task);
 
+        if ($request->has('is_completed') && $request->is_completed) {
+            $incompletePrerequisites = $task->prerequisites()->where('is_completed', false)->count();
+            if ($incompletePrerequisites > 0) {
+                return Redirect::back()->with('error', 'No se puede completar la tarea. Aún tiene dependencias pendientes.');
+            }
+        }
+
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'is_completed' => 'sometimes|required|boolean',
@@ -41,7 +48,7 @@ class TaskController extends Controller
 
         $task->update($validated);
 
-        return Redirect::back(); // Usamos Redirect::back() para que funcione desde cualquier vista
+        return Redirect::back();
     }
 
     public function destroy(Task $task)
