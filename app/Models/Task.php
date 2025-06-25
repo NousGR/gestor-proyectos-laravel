@@ -51,4 +51,9 @@ class Task extends Model
         return $this->belongsToMany(Task::class, 'task_dependencies', 'prerequisite_task_id', 'task_id')
             ->withTimestamps();
     }
+
+    public function activities()
+    {
+        return $this->morphMany(Activity::class, 'subject');
+    }
 }

@@ -20,9 +20,26 @@ class ProjectController extends Controller
                 if ($request->filled('filter_priority')) {
                     $query->where('priority', $request->filter_priority);
                 }
-                //... resto de los filtros ...
+                if ($request->filled('filter_status')) {
+                    $query->where('status', $request->filter_status);
+                }
+                if ($request->filled('sort')) {
+                    $sortField = $request->sort;
+                    if ($sortField === 'priority') {
+                        $query->orderByRaw("
+                            CASE
+                                WHEN priority = 'high' THEN 1
+                                WHEN priority = 'medium' THEN 2
+                                WHEN priority = 'low' THEN 3
+                            END
+                        ");
+                    } else {
+                        $query->orderBy($sortField, 'asc');
+                    }
+                }
             },
-            'tasks.prerequisites', // <- Añadir esto
+            'tasks.prerequisites',
+            'tasks.dependents',
             'tasks.comments.user',
             'tasks.attachments'
         ]);
